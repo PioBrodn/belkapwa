@@ -1,22 +1,84 @@
+
 <!DOCTYPE html>
 <html lang="pl">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Piotr Brodniewicz, Zespół Projektowy Konstimber</title>
-  <link rel="stylesheet" href="style.css" />
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Piotr Brodniewicz, Zespół Projektowy Konstimber - Obliczanie belki drewnianej</title>
+<style>
+  body { font-family: Arial, sans-serif; margin: 20px; }
+  fieldset { margin-bottom: 15px; padding: 10px; }
+  label { display: block; margin-top: 8px; }
+  input, select { margin-top: 4px; padding: 4px; width: 100%; max-width: 300px; }
+  #manualParams label { display: block; margin-top: 6px; }
+  #logo { max-width: 400px; margin-bottom: 15px; }
+  #wyniki { white-space: pre-line; margin-top: 10px; font-weight: bold; }
+</style>
 </head>
 <body>
-  <header style="display:flex; align-items:center; gap:15px; padding:10px; background:#f0f0f0;">
-    <img src="Logo Konstimber poziom.png" alt="Logo Konstimber" style="height:56px; width:auto;" />
-    <h1 style="font-size:1.5rem; margin:0;">
-      Piotr Brodniewicz, Zespół Projektowy Konstimber
-    </h1>
-  </header>
 
-  <!-- Tutaj Twój pozostały kod aplikacji: formularz, wykresy itd. -->
+<img id="logo" src="Logo Konstimber poziom.png" alt="Logo Konstimber" />
 
-  <script src="app.js"></script>
+<h1>Obliczanie belki drewnianej</h1>
+
+<form id="beamForm">
+
+  <fieldset>
+    <legend>Wymiary przekroju [m]</legend>
+    <label for="szerokosc">Szerokość b [m]:</label>
+    <input type="number" step="0.001" min="0.01" id="szerokosc" required value="0.1" />
+    <label for="wysokosc">Wysokość h [m]:</label>
+    <input type="number" step="0.001" min="0.01" id="wysokosc" required value="0.2" />
+  </fieldset>
+
+  <fieldset>
+    <legend>Wymiary belki i obciążenie</legend>
+    <label for="dlugosc">Długość L [m]:</label>
+    <input type="number" step="0.01" min="0.1" id="dlugosc" required value="5" />
+    <label for="sila">Siła skupiona F [N]:</label>
+    <input type="number" step="1" min="0" id="sila" required value="1000" />
+  </fieldset>
+
+  <fieldset>
+    <legend>Materiał drewna</legend>
+    <label for="typDrewna">Typ drewna:</label>
+    <select id="typDrewna" required>
+      <option value="EN338">Drewno lite (EN 338)</option>
+      <option value="EN14080">Drewno klejone (glulam) (EN 14080)</option>
+      <option value="manual">Parametry ręczne</option>
+    </select>
+
+    <label for="klasaDrewna">Klasa drewna:</label>
+    <select id="klasaDrewna" required></select>
+
+    <div id="manualParams" style="display:none; margin-top:10px;">
+      <label>Wytrzymałość na zginanie \( f_{m,k} \) [MPa]: <input type="number" id="fmKManual" min="0" step="0.1"></label>
+      <label>Wytrzymałość na rozciąganie \( f_{t,0,k} \) [MPa]: <input type="number" id="ft0KManual" min="0" step="0.1"></label>
+      <label>Wytrzymałość na ścinanie \( f_{v,d,k} \) [MPa]: <input type="number" id="fvdkManual" min="0" step="0.1"></label>
+      <label>Współczynnik modyfikujący \( k_{mod} \): <input type="number" id="kmodManual" min="0" step="0.01" value="1.0"></label>
+      <label>Współczynnik bezpieczeństwa \( \gamma_M \): <input type="number" id="gammaMManual" min="1" step="0.01" value="1.3"></label>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Współczynnik kh (wysokość przekroju)</legend>
+    <label for="alphaKh">Wartość α dla kh (np. 0.8):</label>
+    <input type="number" id="alphaKh" step="0.01" min="0" max="1" value="0.8" />
+  </fieldset>
+
+  <fieldset>
+    <legend>Opcje obliczeń</legend>
+    <label>
+      <input type="checkbox" id="uwzglednijScinanie"> Uwzględnij ugięcie od ścinania (Załącznik krajowy EC5)
+    </label>
+  </fieldset>
+
+  <button type="submit">Oblicz</button>
+</form>
+
+<div id="wyniki"></div>
+
+<script src="app.js"></script>
+
 </body>
 </html>
