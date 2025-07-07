@@ -1,93 +1,114 @@
+function calculate() {
+  const L = parseFloat(document.getElementById('length').value); // [m]
+  const b = parseFloat(document.getElementById('width').value);  // [m]
+  const h = parseFloat(document.getElementById('height').value); // [m]
+  const P = parseFloat(document.getElementById('forceP').value) * 1000; // [N]
+  const Q = parseFloat(document.getElementById('loadQ').value) * 1000;  // [N/m]
+  const kmod = parseFloat(document.getElementById('kmod').value);
+  const ldivx = parseFloat(document.getElementById('ldivx').value);
+  const usageClass = parseInt(document.getElementById('usageClass').value);
+  const shearDeflection = document.getElementById('shearDeflection').checked;
 
-// app.js
-const klasyDrewna = {
-  EN338: {
-    C14: { fmk: 14, ft0k: 1.3, fvdk: 1.5 },
-    C18: { fmk: 18, ft0k: 1.6, fvdk: 1.8 },
-    C24: { fmk: 24, ft0k: 2.1, fvdk: 2.5 },
-    C30: { fmk: 30, ft0k: 2.5, fvdk: 3.0 }
-  },
-  EN14080: {
-    GL24h: { fmk: 24, ft0k: 17, fvdk: 3.0 },
-    GL28h: { fmk: 28, ft0k: 19, fvdk: 3.5 },
-    GL32h: { fmk: 32, ft0k: 21, fvdk: 4.0 }
-  }
-};
-
-const typDrewnaSelect = document.getElementById('typDrewna');
-const klasaDrewnaSelect = document.getElementById('klasaDrewna');
-const manualParamsDiv = document.getElementById('manualParams');
-
-function wypelnijKlasy() {
-  const typ = typDrewnaSelect.value;
-  klasaDrewnaSelect.innerHTML = '';
-
-  if (typ === 'manual') {
-    manualParamsDiv.style.display = 'block';
-    klasaDrewnaSelect.style.display = 'none';
-  } else {
-    manualParamsDiv.style.display = 'none';
-    klasaDrewnaSelect.style.display = 'inline-block';
-    for (const klasa in klasyDrewna[typ]) {
-      const opt = document.createElement('option');
-      opt.value = klasa;
-      opt.textContent = klasa;
-      klasaDrewnaSelect.appendChild(opt);
-    }
-  }
-}
-typDrewnaSelect.addEventListener('change', wypelnijKlasy);
-wypelnijKlasy();
-
-document.getElementById('beamForm').addEventListener('submit', function (e) {
-  e.preventDefault();
-  const b = parseFloat(document.getElementById('szerokosc').value);
-  const h = parseFloat(document.getElementById('wysokosc').value);
-  const L = parseFloat(document.getElementById('dlugosc').value);
-  const F = parseFloat(document.getElementById('sila').value);
-  const alphaKh = parseFloat(document.getElementById('alphaKh').value);
-  const uwzglednijScinanie = document.getElementById('uwzglednijScinanie').checked;
-
-  let fmk, ft0k, fvdk, kmod, gammaM;
-  if (typDrewnaSelect.value === 'manual') {
-    fmk = parseFloat(document.getElementById('fmKManual').value);
-    ft0k = parseFloat(document.getElementById('ft0KManual').value);
-    fvdk = parseFloat(document.getElementById('fvdkManual').value);
-    kmod = parseFloat(document.getElementById('kmodManual').value);
-    gammaM = parseFloat(document.getElementById('gammaMManual').value);
-  } else {
-    const klasa = klasaDrewnaSelect.value;
-    const material = klasyDrewna[typDrewnaSelect.value][klasa];
-    fmk = material.fmk;
-    ft0k = material.ft0k;
-    fvdk = material.fvdk;
-    kmod = 0.9;
-    gammaM = 1.3;
-  }
-
-  function kh(h, h0 = 150, alpha = 0.8) {
-    h *= 1000;
-    if (h <= h0) return 1.0;
-    return 1 + alpha * (h - h0) / (20 * h0);
-  }
-  const khVal = kh(h, 150, alphaKh);
+  // Właściwości geometryczne
   const A = b * h;
-  const I = (b * h ** 3) / 12;
-  const nu = 0.3;
-  const E = 11000e6;
-  const G = E / (2 * (1 + nu));
-  const Mrd = (fmk * 1e6 * kmod * I) / (gammaM * (h / 2) * khVal);
-  const delta_b = (F * L ** 3) / (48 * E * I);
-  let delta_v = 0;
-  if (uwzglednijScinanie) delta_v = (1.5 * F * L) / (A * G);
-  const delta = delta_b + delta_v;
+  const Iy = (b * Math.pow(h,3)) / 12;
+  const W = Iy / (h/2);
 
-  const wynik = `
-Współczynnik kh: ${khVal.toFixed(3)}
-Nośność momentowa Mrd: ${(Mrd / 1e3).toFixed(2)} kNm
-Ugięcie zginające: ${delta_b.toExponential(6)} m
-Ugięcie od ścinania: ${delta_v.toExponential(6)} m
-Ugięcie całkowite: ${delta.toExponential(6)} m
-  `;
-  document.getElementById('wyniki').textContent = wynik;
-});
+  // Ciężar własny (N/m)
+  const gself = A * 500 * 9.81;
+  const q_total = Q + gself;
+
+  // Moment max (kNm)
+  let MEd = (q_total * Math.pow(L,2) / 8 + P * L / 4) / 1000;
+
+  // Naprężenie zginające (MPa)
+  let sigma_mEd = (MEd * 1e6) / W / 1e6;
+
+  // Przyjęta wytrzymałość na zginanie (MPa)
+  let fmd = 24 * kmod / 1.3;
+
+  // Siła tnąca max (kN)
+  let VEd = (q_total * L / 2 + P / 2) / 1000;
+
+  // Przyjęta wytrzymałość na ścinanie (MPa)
+  let fvd = 2.5 * kmod / 1.3;
+
+  // Naprężenie ścinające (MPa)
+  let tau_Ed = (VEd * 1000) / (A) / 1e6;
+
+  // Moduły
+  let E = 11000e6;
+  let G = 650e6;
+
+  // Ugięcie od zginania
+  let delta_bend = (5 * q_total * Math.pow(L,4)) / (384 * E * Iy);
+  delta_bend += (P * Math.pow(L,3)) / (48 * E * Iy);
+
+  // Ugięcie od ścinania
+  let delta_shear = 0;
+  if (shearDeflection) {
+    delta_shear = (q_total * Math.pow(L,2)) / (2 * G * A);
+    delta_shear += (P * L) / (G * A);
+  }
+
+  // kdef wg klasy użytkowania
+  let kdef = usageClass === 1 ? 0.6 : usageClass === 2 ? 0.8 : 2.0;
+
+  // Ugięcie końcowe (mm)
+  let delta_final = (delta_bend + delta_shear) * (1 + kdef) * 1000;
+
+  // Ugięcie dopuszczalne (mm)
+  let delta_limit = (L * 1000) / ldivx;
+
+  // Wyniki
+  let html = '';
+  html += resultBlock(`M<sub>Ed</sub> = ${MEd.toFixed(2)} kNm ≤ M<sub>Rd</sub> = ${(fmd*W/1000000).toFixed(2)} kNm`, MEd <= fmd*W/1000000);
+  html += resultBlock(`σ<sub>m,Ed</sub> = ${sigma_mEd.toFixed(2)} MPa ≤ f<sub>m,d</sub> = ${fmd.toFixed(2)} MPa`, sigma_mEd <= fmd);
+  html += resultBlock(`V<sub>Ed</sub> = ${VEd.toFixed(2)} kN`, true);
+  html += resultBlock(`τ<sub>Ed</sub> = ${tau_Ed.toFixed(2)} MPa ≤ f<sub>v,d</sub> = ${fvd.toFixed(2)} MPa`, tau_Ed <= fvd);
+  html += resultBlock(`w = ${delta_final.toFixed(2)} mm ≤ w<sub>dop</sub> = ${delta_limit.toFixed(2)} mm`, delta_final <= delta_limit);
+
+  // Podsumowanie
+  if (MEd <= fmd*W/1000000 && sigma_mEd <= fmd && tau_Ed <= fvd && delta_final <= delta_limit) {
+    html += `<div class="result-block success"><strong>✔ Belka spełnia warunki nośności i użytkowalności</strong></div>`;
+  } else {
+    html += `<div class="result-block failure"><strong>❌ Belka nie spełnia warunków — konieczna zmiana przekroju / materiału</strong></div>`;
+  }
+
+  document.getElementById('results').innerHTML = html;
+
+  // Wykresy (prosty przykład momentu)
+  renderChart('chartMoment', 'Moment [kNm]', [0, L/2, L], [0, MEd, 0]);
+  renderChart('chartShear', 'Siła tnąca [kN]', [0, L/2, L], [VEd, 0, -VEd]);
+  renderChart('chartDeflection', 'Ugięcie [mm]', [0, L/2, L], [0, delta_final, 0]);
+}
+
+function resultBlock(text, ok) {
+  return `<div class="result-block ${ok ? 'success' : 'failure'}">
+    ${ok ? '✔' : '❌'} ${text}
+  </div>`;
+}
+
+function renderChart(id, label, xData, yData) {
+  const ctx = document.getElementById(id).getContext('2d');
+  new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: xData.map(v => v.toFixed(2)),
+      datasets: [{
+        label: label,
+        data: yData,
+        fill: false,
+        borderColor: '#4CAF50',
+        tension: 0.1
+      }]
+    },
+    options: {
+      responsive: true,
+      scales: {
+        x: { title: { display: true, text: 'L [m]' } },
+        y: { title: { display: true, text: label } }
+      }
+    }
+  });
+}
