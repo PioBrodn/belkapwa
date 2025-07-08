@@ -1,1 +1,31 @@
-<html><head><title>Obliczanie belki drewnianej</title></head><body><h1>Piotr Brodniewicz, Zespół Projektowy Konstimber</h1></body></html>
+
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Obliczanie belki drewnianej</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <img src="Logo Konstimber poziom.png" alt="Logo Konstimber" class="logo">
+        <h1>Piotr Brodniewicz, Zespół Projektowy Konstimber</h1>
+    </header>
+    <main>
+        <h2>Obliczanie belki drewnianej</h2>
+        <form id="beamForm">
+            <label>Rozpiętość belki (m): <input type="number" step="0.01" id="length" required></label><br>
+            <label>Szerokość przekroju (mm): <input type="number" id="width" required></label><br>
+            <label>Wysokość przekroju (mm): <input type="number" id="height" required></label><br>
+            <label>Siła skupiona P (kN): <input type="number" step="0.01" id="P"></label><br>
+            <label>Położenie siły P od lewej podpory (m): <input type="number" step="0.01" id="P_pos"></label><br>
+            <label>Obciążenie równomierne q (kN/m): <input type="number" step="0.01" id="q"></label><br>
+            <button type="submit">Oblicz</button>
+        </form>
+        <section id="results"></section>
+        <canvas id="momentChart"></canvas>
+    </main>
+    <script src="app.js"></script>
+</body>
+</html>
