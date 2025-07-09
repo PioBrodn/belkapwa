@@ -1,7 +1,121 @@
-body { font-family: Arial, sans-serif; margin: 0; padding: 0; }
-header { background-color: #004d40; color: white; padding: 1em; text-align: center; }
-main { padding: 2em; max-width: 800px; margin: auto; }
-form label { display: block; margin-top: 1em; }
-form input { width: 100%; padding: 0.5em; }
-button { margin-top: 1.5em; padding: 0.7em 1.5em; background: #004d40; color: white; border: none; }
-canvas { margin-top: 2em; display: block; }
+body {
+  font-family: sans-serif;
+  margin: 0;
+  padding: 0;
+  background: #f8f9fa;
+  color: #222;
+}
+
+header {
+  background: #004d40;
+  color: white;
+  padding: 1rem;
+  text-align: center;
+}
+
+.logo {
+  max-height: 80px;
+  display: block;
+  margin: 0 auto 1rem;
+}
+
+main {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+  padding: 1rem;
+  max-width: 1200px;
+  margin: auto;
+}
+
+.inputs {
+  background: white;
+  padding: 1rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.inputs label {
+  display: block;
+  margin-top: 0.6rem;
+}
+
+.inputs input,
+.inputs select {
+  width: 100%;
+  padding: 0.4rem;
+  margin-top: 0.2rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  box-sizing: border-box;
+}
+
+.inputs fieldset {
+  border: 1px solid #ccc;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-top: 1rem;
+}
+
+.inputs legend {
+  font-weight: bold;
+}
+
+button#calculateBtn {
+  margin-top: 1.5rem;
+  padding: 0.8rem 1.5rem;
+  background: #00796b;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+button#calculateBtn:hover {
+  background: #004d40;
+}
+
+.diagram, .results {
+  background: white;
+  padding: 1rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+canvas {
+  margin-top: 1rem;
+  display: block;
+  max-width: 100%;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  background: #fff;
+}
+
+footer {
+  text-align: center;
+  padding: 1rem;
+  font-size: 0.9rem;
+  background: #eee;
+  margin-top: 2rem;
+}
+
+.success {
+  color: green;
+  font-weight: bold;
+}
+
+.failure {
+  color: red;
+  font-weight: bold;
+}
+
+.equation {
+  font-family: "Cambria Math", "Times New Roman", serif;
+  font-style: italic;
+}
+
+.index {
+  vertical-align: sub;
+  font-size: 0.8em;
+}

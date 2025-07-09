@@ -3,35 +3,118 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Obliczanie belki drewnianej</title>
-  <link rel="stylesheet" href="style.css" />
-  <link rel="manifest" href="manifest.json">
+  <title>Obliczanie belki drewnianej – Konstimber</title>
+  <link rel="stylesheet" href="style.css"/>
+  <script defer src="app.js"></script>
 </head>
 <body>
   <header>
-    <img src="Logo Konstimber poziom.png" alt="Logo Konstimber" style="height:60px;" />
-    <h1>Piotr Brodniewicz, Zespół Projektowy Konstimber</h1>
-    <h2>Obliczanie belki drewnianej</h2>
+    <img src="Logo Konstimber poziom.png" alt="Logo Konstimber" class="logo"/>
+    <h1>Obliczanie belki drewnianej</h1>
+    <h2>Piotr Brodniewicz, Zespół Projektowy Konstimber</h2>
   </header>
-  <main id="app">
-    <form id="beamForm">
-      <label for="length">Długość belki [m]:</label>
-      <input type="number" id="length" name="length" step="0.01" min="0" required>
-      <label for="width">Szerokość przekroju [mm]:</label>
-      <input type="number" id="width" name="width" step="1" min="0" required>
-      <label for="height">Wysokość przekroju [mm]:</label>
-      <input type="number" id="height" name="height" step="1" min="0" required>
-      <label for="load">Obciążenie równomierne [kN/m]:</label>
-      <input type="number" id="load" name="load" step="0.01" min="0" required>
-      <label for="pointLoad">Siła skupiona P [kN]:</label>
-      <input type="number" id="pointLoad" name="pointLoad" step="0.01" min="0">
-      <label for="pointLocation">Lokalizacja siły P [m]:</label>
-      <input type="number" id="pointLocation" name="pointLocation" step="0.01" min="0">
-      <button type="submit">Oblicz</button>
-    </form>
-    <section id="results"></section>
-    <canvas id="momentChart" width="800" height="160"></canvas>
+
+  <main>
+    <section class="inputs">
+      <h3>Dane wejściowe</h3>
+
+      <label for="span">Rozpiętość belki L [m]:</label>
+      <input type="number" id="span" step="0.01" value="4"/>
+
+      <label for="support">Schemat statyczny:</label>
+      <select id="support">
+        <option value="simply_supported">Belka swobodnie podparta</option>
+        <option value="cantilever">Belka wspornikowa</option>
+        <option value="two_span">Belka dwuprzęsłowa</option>
+        <option value="three_span">Belka trójprzęsłowa</option>
+      </select>
+
+      <label for="material">Typ materiału:</label>
+      <select id="material">
+        <option value="C24">Drewno lite – C24</option>
+        <option value="C30">Drewno lite – C30</option>
+        <option value="GL24h">Drewno klejone – GL24h</option>
+        <option value="GL30c">Drewno klejone – GL30c</option>
+        <option value="LVL">LVL</option>
+      </select>
+
+      <label for="b">Szerokość przekroju b [mm]:</label>
+      <input type="number" id="b" step="1" value="120"/>
+      <label for="h">Wysokość przekroju h [mm]:</label>
+      <input type="number" id="h" step="1" value="240"/>
+
+      <label for="use_class">Klasa użytkowania:</label>
+      <select id="use_class">
+        <option value="1">Klasa 1 (sucha)</option>
+        <option value="2">Klasa 2 (wilgotna)</option>
+        <option value="3">Klasa 3 (na zewnątrz)</option>
+      </select>
+
+      <label for="kmod">Współczynnik kmod: <small>(np. 0.9 dla śniegu)</small></label>
+      <input type="number" step="0.01" id="kmod" value="0.9"/>
+
+      <fieldset>
+        <legend>Obciążenia charakterystyczne</legend>
+
+        <label for="g">Obciążenie stałe q<sub>g</sub> [kN/m]:</label>
+        <input type="number" id="g" step="0.01" value="1.0"/>
+        <label for="g_gamma">γ<sub>g</sub>:</label>
+        <input type="number" id="g_gamma" step="0.01" value="1.35"/>
+
+        <label for="q_live">Obciążenie użytkowe q<sub>live</sub> [kN/m]:</label>
+        <input type="number" id="q_live" step="0.01" value="1.5"/>
+        <label for="q_live_gamma">γ<sub>q,live</sub>:</label>
+        <input type="number" id="q_live_gamma" step="0.01" value="1.5"/>
+
+        <label for="q_snow">Obciążenie śniegowe q<sub>snow</sub> [kN/m]:</label>
+        <input type="number" id="q_snow" step="0.01" value="1.0"/>
+        <label for="q_snow_gamma">γ<sub>q,snow</sub>:</label>
+        <input type="number" id="q_snow_gamma" step="0.01" value="1.5"/>
+
+        <label for="q_wind">Obciążenie wiatrowe q<sub>wind</sub> [kN/m]:</label>
+        <input type="number" id="q_wind" step="0.01" value="0.5"/>
+        <label for="q_wind_gamma">γ<sub>q,wind</sub>:</label>
+        <input type="number" id="q_wind_gamma" step="0.01" value="1.5"/>
+
+        <label for="P">Siła skupiona P<sub>k</sub> [kN]:</label>
+        <input type="number" id="P" step="0.01" value="5"/>
+        <label for="P_dist">Lokalizacja siły skupionej od początku belki [m]:</label>
+        <input type="number" id="P_dist" step="0.01" value="2.0"/>
+        <label for="P_gamma">γ<sub>P</sub>:</label>
+        <input type="number" id="P_gamma" step="0.01" value="1.5"/>
+      </fieldset>
+
+      <label for="delta_limit">Ugięcie dopuszczalne [mm]:</label>
+      <input type="number" id="delta_limit" value="13"/>
+
+      <label for="check_shear_deflection">
+        <input type="checkbox" id="check_shear_deflection" checked/>
+        Uwzględnij wpływ ścinania na ugięcie
+      </label>
+
+      <label for="optimize">Dobierz przekrój optymalny (o najmniejszym A):</label>
+      <input type="checkbox" id="optimize" />
+
+      <button id="calculateBtn">Oblicz</button>
+    </section>
+
+    <section class="diagram">
+      <h3>Schemat obciążenia (symboliczny)</h3>
+      <canvas id="beamDiagram" width="600" height="120"></canvas>
+    </section>
+
+    <section class="results">
+      <h3>Wyniki</h3>
+      <div id="summary"></div>
+      <canvas id="shearCanvas" width="1000" height="200"></canvas>
+      <canvas id="momentCanvas" width="1000" height="200"></canvas>
+      <canvas id="deflectionCanvas" width="1000" height="200"></canvas>
+    </section>
   </main>
-  <script src="app.js"></script>
+
+  <footer>
+    <p>Wszystkie obciążenia traktowane są jako obliczeniowe.</p>
+    <p>© 2025 Piotr Brodniewicz – Zespół Projektowy Konstimber</p>
+  </footer>
 </body>
 </html>
