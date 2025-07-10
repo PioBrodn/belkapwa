@@ -1,6 +1,16 @@
 // app.js (draft start)
 document.getElementById("calculateBtn").addEventListener("click", () => {
   const L = parseFloat(document.getElementById("span").value);
+  const deflectionType = document.getElementById("deflection_type").value;
+    let delta_limit;
+
+    if (deflectionType === "absolute") {
+  delta_limit = parseFloat(document.getElementById("delta_limit").value); // mm
+    } else {
+  const ratio = parseFloat(document.getElementById("delta_limit_ratio").value); // np. 300
+  delta_limit = (L * 1000) / ratio; // mm
+}
+
   const b = parseFloat(document.getElementById("b").value) / 1000; // mm to m
   const h = parseFloat(document.getElementById("h").value) / 1000;
   const A = b * h;
@@ -22,10 +32,52 @@ document.getElementById("calculateBtn").addEventListener("click", () => {
   const P_gamma = parseFloat(document.getElementById("P_gamma").value);
 
   const kmod = parseFloat(document.getElementById("kmod").value);
-  const gammaM = 1.3; // Eurocode default for wood
+  const includeShear = document.getElementById("check_shear_deflection").checked;
+  const material = document.getElementById("material").value;
+
+  // gammaM and density based on material type
+  let gammaM = 1.3; // default
+  let density = 500; // default
+  let fm_k = 24; // default characteristic bending strength in MPa
+  let fv_k = 4;   // default shear strength in MPa
+  let E0_mean = 11000; // default modulus of elasticity in MPa
+
+  if (material.startsWith("GL")) {
+    gammaM = 1.25;
+    switch (material) {
+      case "GL24c": density = 385; fm_k = 24; fv_k = 3.5; E0_mean = 11000; break;
+      case "GL24h": density = 385; fm_k = 24; fv_k = 3.5; E0_mean = 11500; break;
+      case "GL28c": density = 390; fm_k = 28; fv_k = 3.5; E0_mean = 12500; break;
+      case "GL28h": density = 425; fm_k = 28; fv_k = 3.5; E0_mean = 12600; break;
+      case "GL30c": density = 390; fm_k = 30; fv_k = 3.5; E0_mean = 13000; break;
+      case "GL30h": density = 430; fm_k = 30; fv_k = 3.5; E0_mean = 13600; break;
+      default: density = 430; fm_k = 24; fv_k = 2.5; E0_mean = 11500; break;
+    }
+  } else if (material === "LVL") {
+    gammaM = 1.2;
+    density = 550;
+    fm_k = 44;
+    fv_k = 4.6;
+    E0_mean = 14000;
+  } else {
+    switch (material) {
+      case "C20": density = 330; fm_k = 20; fv_k = 2.6; E0_mean = 9000; break;
+      case "C24": density = 350; fm_k = 24; fv_k = 4.0; E0_mean = 11000; break;
+      case "C30": density = 380; fm_k = 30; fv_k = 4.0; E0_mean = 12000; break;
+      default: density = 500; fm_k = 24; fv_k = 3.5; E0_mean = 11000; break;
+    }
+  }
+
+  // update displayed material properties
+  function updateMaterialProperties() {
+    document.getElementById("fm_k_display").innerHTML = `f<sub>m,k</sub> = ${fm_k.toFixed(1)} MPa`;
+    document.getElementById("fv_k_display").innerHTML = `f<sub>v,k</sub> = ${fv_k.toFixed(1)} MPa`;
+    document.getElementById("E0_display").innerHTML = `E<sub>0,mean</sub> = ${E0_mean} MPa`;
+    document.getElementById("density_display").innerHTML = `ρ<sub>k</sub> = ${density} kg/m³`;
+  }
+  updateMaterialProperties();
 
   // self weight
-  const density = 500; // kg/m3 for timber (generic), can be extended per material
   const g_self = density * 9.81 * A; // N/m
   const q_self = g_self / 1000; // kN/m
 
@@ -36,15 +88,44 @@ document.getElementById("calculateBtn").addEventListener("click", () => {
   let M_Ed = 0;
   let V_Ed = 0;
 
-  if (support === "simply_supported") {
+switch (support) {
+  case "simply_supported":
     M_Ed = (q_d * Math.pow(L, 2)) / 8;
     V_Ed = (q_d * L) / 2;
-  }
+    break;
 
-  const f_md = 24 * 1000000 * kmod / gammaM; // N/m2 (for C24 default), to be replaced by lookup
+  case "cantilever":
+    M_Ed = (q_d * Math.pow(L, 2)) / 2;
+    V_Ed = q_d * L;
+    break;
+
+  case "two_span":
+  case "three_span":
+    alert("Wybrany schemat statyczny nie jest jeszcze obsługiwany.");
+    return;
+
+  default:
+    alert("Nieznany schemat statyczny.");
+    return;
+}
+
+
+  const f_md = fm_k * 1000000 * kmod / gammaM; // N/m2
   const sigma_md = (M_Ed * h / 2) / I * 1000000; // N/m2 to N/mm2
 
   const isMomentSafe = sigma_md < f_md / 1e6;
+let delta_q = (5 * q_d * Math.pow(L, 4)) / (384 * E0_mean * 1e6 * I); // w metrach
+
+if (includeShear) {
+  const k = 1.2; // współczynnik dla prostokątnego przekroju
+  const G = E0_mean / 16; // MPa – uproszczony przelicznik
+  const A_s = b * h * 1e6; // mm²
+  const delta_shear = (k * q_d * Math.pow(L, 2)) / (G * A_s); // w metrach
+  delta_q += delta_shear;
+}
+
+const delta_q_mm = delta_q * 1000;
+const isDeflectionOk = delta_q_mm <= delta_limit;
 
   const summary = `
     <p><strong>Geometria:</strong> A = ${(A * 1e6).toFixed(2)} cm², I = ${(I * 1e12).toFixed(2)} cm⁴</p>
@@ -52,7 +133,19 @@ document.getElementById("calculateBtn").addEventListener("click", () => {
     <p><strong>Moment zginający M<sub>Ed</sub></strong> = ${M_Ed.toFixed(2)} kNm</p>
     <p><strong>Naprężenie zginające σ<sub>m,d</sub></strong> = ${sigma_md.toFixed(2)} N/mm² ${isMomentSafe ? '✅' : '❌'}</p>
     <p><strong>Nośność obliczeniowa f<sub>m,d</sub></strong> = ${(f_md / 1e6).toFixed(2)} N/mm²</p>
+    <p><strong>Wytrzymałość na ścinanie f<sub>v,k</sub>:</strong> ${fv_k.toFixed(2)} MPa, Moduł sprężystości E<sub>0,mean</sub>: ${E0_mean} MPa</p>
+    <p><strong>Ugięcie obliczeniowe δ</strong> = ${delta_q_mm.toFixed(2)} mm ${isDeflectionOk ? '✅' : '❌'}</p>
+  <p><strong>Ugięcie dopuszczalne</strong> = ${delta_limit.toFixed(1)} mm</p>
+
   `;
 
   document.getElementById("summary").innerHTML = summary;
 });
+
+// Event listener to update on material change
+const materialSelector = document.getElementById("material");
+if (materialSelector) {
+  materialSelector.addEventListener("change", () => {
+    document.getElementById("calculateBtn").click();
+  });
+}

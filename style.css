@@ -29,10 +29,10 @@ main {
 }
 
 .inputs {
-  background: white;
+  max-width: 600px; /* lub np. 40% szerokości ekranu */
+  margin: 0 auto;
   padding: 1rem;
-  border-radius: 12px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  box-sizing: border-box;
 }
 
 .inputs label {
@@ -59,6 +59,15 @@ main {
 
 .inputs legend {
   font-weight: bold;
+}
+
+.inputs label,
+.inputs input,
+.inputs select,
+.inputs fieldset {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 button#calculateBtn {
