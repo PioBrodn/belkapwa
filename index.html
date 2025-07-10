@@ -18,8 +18,8 @@
     <section class="inputs">
       <h3>Dane wejściowe</h3>
 
-      <label for="span">Rozpiętość belki L [m]:</label>
-      <input type="number" id="span" step="0.01" value="4"/>
+      <label for="span">Rozpiętość przęsła belki L [m]:</label>
+      <input type="number" id="span" step="0.1" value="4"/>
 
       <label for="support">Schemat statyczny:</label>
       <select id="support">
@@ -31,17 +31,24 @@
 
       <label for="material">Typ materiału:</label>
       <select id="material">
-        <option value="C24">Drewno lite – C24</option>
-        <option value="C30">Drewno lite – C30</option>
-        <option value="GL24h">Drewno klejone – GL24h</option>
-        <option value="GL30c">Drewno klejone – GL30c</option>
+        <option value="C14">Drewno lite C14</option>
+          <option value="C17">Drewno lite C17</option>
+          <option value="C20">Drewno lite C20</option>
+          <option value="C24" selected>Drewno lite C24</option>
+          <option value="C30">Drewno lite C30</option>
+          <option value="GL24c">Drewno klejone GL24c</option>
+          <option value="GL24h">Drewno klejone GL24h</option>
+          <option value="GL28c">Drewno klejone GL28c</option>
+          <option value="GL28h">Drewno klejone GL28h</option>
+          <option value="GL30c">Drewno klejone GL30c</option>
+          <option value="GL30h">Drewno klejone GL30h</option>
         <option value="LVL">LVL</option>
       </select>
 
       <label for="b">Szerokość przekroju b [mm]:</label>
-      <input type="number" id="b" step="1" value="120"/>
+      <input type="number" id="b" step="10" value="120"/>
       <label for="h">Wysokość przekroju h [mm]:</label>
-      <input type="number" id="h" step="1" value="240"/>
+      <input type="number" id="h" step="10" value="240"/>
 
       <label for="use_class">Klasa użytkowania:</label>
       <select id="use_class">
@@ -50,43 +57,59 @@
         <option value="3">Klasa 3 (na zewnątrz)</option>
       </select>
 
-      <label for="kmod">Współczynnik kmod: <small>(np. 0.9 dla śniegu)</small></label>
-      <input type="number" step="0.01" id="kmod" value="0.9"/>
+	 <label for="kmod">Współczynnik k<sub>mod</sub>:
+          <span class="tooltip" title="Zależny od klasy obciążenia i czasu działania. Przykład: 0.6 (stałe), 0.8 (śnieg, użytkowe), 0.9 (wiatr)">
+            ⓘ
+          </span>
+        </label>
+        <input type="number" id="kmod" min="0" max="1.1" step="0.01" value="0.8" />
 
       <fieldset>
-        <legend>Obciążenia charakterystyczne</legend>
+        <legend>Obciążenia charakterystyczne:</legend>
 
         <label for="g">Obciążenie stałe q<sub>g</sub> [kN/m]:</label>
         <input type="number" id="g" step="0.01" value="1.0"/>
         <label for="g_gamma">γ<sub>g</sub>:</label>
-        <input type="number" id="g_gamma" step="0.01" value="1.35"/>
+        <input type="number" id="g_gamma" step="0.05" value="1.15"/>
 
         <label for="q_live">Obciążenie użytkowe q<sub>live</sub> [kN/m]:</label>
         <input type="number" id="q_live" step="0.01" value="1.5"/>
         <label for="q_live_gamma">γ<sub>q,live</sub>:</label>
-        <input type="number" id="q_live_gamma" step="0.01" value="1.5"/>
+        <input type="number" id="q_live_gamma" step="0.05" value="1.5"/>
 
         <label for="q_snow">Obciążenie śniegowe q<sub>snow</sub> [kN/m]:</label>
         <input type="number" id="q_snow" step="0.01" value="1.0"/>
         <label for="q_snow_gamma">γ<sub>q,snow</sub>:</label>
-        <input type="number" id="q_snow_gamma" step="0.01" value="1.5"/>
+        <input type="number" id="q_snow_gamma" step="0.05" value="1.5"/>
 
         <label for="q_wind">Obciążenie wiatrowe q<sub>wind</sub> [kN/m]:</label>
         <input type="number" id="q_wind" step="0.01" value="0.5"/>
         <label for="q_wind_gamma">γ<sub>q,wind</sub>:</label>
-        <input type="number" id="q_wind_gamma" step="0.01" value="1.5"/>
+        <input type="number" id="q_wind_gamma" step="0.05" value="1.5"/>
 
         <label for="P">Siła skupiona P<sub>k</sub> [kN]:</label>
-        <input type="number" id="P" step="0.01" value="5"/>
+        <input type="number" id="P" step="1" value="5"/>
         <label for="P_dist">Lokalizacja siły skupionej od początku belki [m]:</label>
-        <input type="number" id="P_dist" step="0.01" value="2.0"/>
+        <input type="number" id="P_dist" step="0.1" value="2.0"/>
         <label for="P_gamma">γ<sub>P</sub>:</label>
-        <input type="number" id="P_gamma" step="0.01" value="1.5"/>
+        <input type="number" id="P_gamma" step="0.1" value="1.5"/>
       </fieldset>
 
-      <label for="delta_limit">Ugięcie dopuszczalne [mm]:</label>
-      <input type="number" id="delta_limit" value="13"/>
+      <label for="deflection_type">Typ ugięcia dopuszczalnego:</label>
+<select id="deflection_type">
+  <option value="absolute">Wartość bezwzględna [mm]</option>
+  <option value="relative">Wartość względna (L/x)</option>
+</select>
 
+<div id="deflection_absolute_container">
+  <label for="delta_limit">Ugięcie dopuszczalne [mm]:</label>
+  <input type="number" id="delta_limit" value="20" step="1" />
+</div>
+
+<div id="deflection_relative_container" style="display:none;">
+  <label for="delta_limit_ratio">Ugięcie dopuszczalne L/x:</label>
+  <input type="number" id="delta_limit_ratio" value="300" step="10" />
+</div>
       <label for="check_shear_deflection">
         <input type="checkbox" id="check_shear_deflection" checked/>
         Uwzględnij wpływ ścinania na ugięcie
@@ -117,4 +140,14 @@
     <p>© 2025 Piotr Brodniewicz – Zespół Projektowy Konstimber</p>
   </footer>
 </body>
+
+<script>
+  // Dynamic switching of deflection input type
+  document.getElementById('deflection_type').addEventListener('change', function () {
+    const type = this.value;
+    document.getElementById('deflection_absolute_container').style.display = type === 'absolute' ? 'block' : 'none';
+    document.getElementById('deflection_relative_container').style.display = type === 'relative' ? 'block' : 'none';
+  });
+</script>
+
 </html>
