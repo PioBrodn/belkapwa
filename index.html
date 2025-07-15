@@ -43,15 +43,22 @@
         <option value="LVL">LVL</option>
       </select>
 
-      <div id="materialProperties" style="margin-top: 10px;">
-  <p><strong>Cechy materiałowe:</strong></p>
-  <ul>
-    <li>Wytrzymałość na zginanie: <span id="fm_k_display">–</span> MPa</li>
-    <li>Wytrzymałość na ścinanie: <span id="fv_k_display">–</span> MPa</li>
-    <li>Moduł sprężystości: <span id="E0_display">–</span> MPa</li>
-    <li>Gęstość charakterystyczna: <span id="density_display">–</span> kg/m³</li>
-  </ul>
+
+<div class="material-values">
+  <p>f<sub>m,k</sub> = <span id="fm_k_display"></span> N/mm²</p>
+  <p>f<sub>v,k</sub> = <span id="fv_k_display"></span> N/mm²</p>
+  <p>E<sub>0,mean</sub> = <span id="E0_display"></span> MPa</p>
+  <p>ρ = <span id="density_display"></span> kg/m³</p>
 </div>
+      <div id="material-properties" style="margin-top: 10px;">
+        <p><strong>Właściwości materiału:</strong></p>
+        <ul>
+          <li>f<sub>m,k</sub> (zginanie): <span id="fm_k_display">–</span> N/mm²</li>
+          <li>f<sub>v,k</sub> (ścinanie): <span id="fv_k_display">–</span> N/mm²</li>
+          <li>E<sub>0,mean</sub> (moduł sprężystości): <span id="E0_display">–</span> MPa</li>
+          <li>ρ<sub>k</sub> (gęstość charakterystyczna): <span id="density_display">–</span> kg/m³</li>
+        </ul>
+      </div>
 
       <label for="b">Szerokość przekroju b [mm]:</label>
       <input type="number" id="b" step="10" value="120"/>
@@ -59,22 +66,22 @@
       <input type="number" id="h" step="10" value="240"/>
 
       <label for="use_class">Klasa użytkowania:
-  <span class="tooltip" title="Wpływa na warunki wilgotności i długości oddziaływania. Klasa 1: wnętrza suche; Klasa 2: wnętrza wilgotne; Klasa 3: zewnętrzne.">
-    ⓘ
-  </span>
-</label>
+        <span class="tooltip" title="Wpływa na warunki wilgotności i długości oddziaływania. Klasa 1: wnętrza suche; Klasa 2: wnętrza wilgotne; Klasa 3: zewnętrzne.">
+          ⓘ
+        </span>
+      </label>
       <select id="use_class">
         <option value="1">Klasa 1 (sucha)</option>
         <option value="2">Klasa 2 (wilgotna)</option>
         <option value="3">Klasa 3 (na zewnątrz)</option>
       </select>
 
-	 <label for="kmod">Współczynnik k<sub>mod</sub>:
-          <span class="tooltip" title="Zależny od klasy obciążenia i czasu działania. Przykład: 0.6 (stałe), 0.8 (śnieg, użytkowe), 0.9 (wiatr)">
-            ⓘ
-          </span>
-        </label>
-        <input type="number" id="kmod" min="0" max="1.1" step="0.1" value="0.8" />
+      <label for="kmod">Współczynnik k<sub>mod</sub>:
+        <span class="tooltip" title="Zależny od klasy obciążenia i czasu działania. Przykład: 0.6 (stałe), 0.8 (śnieg, użytkowe), 0.9 (wiatr)">
+          ⓘ
+        </span>
+      </label>
+      <input type="number" id="kmod" min="0" max="1.1" step="0.1" value="0.8" />
 
       <fieldset>
         <legend>Obciążenia charakterystyczne:</legend>
@@ -108,26 +115,27 @@
       </fieldset>
 
       <label for="deflection_type">Typ ugięcia dopuszczalnego:</label>
-<select id="deflection_type">
-  <option value="absolute">Wartość bezwzględna [mm]</option>
-  <option value="relative">Wartość względna (L/x)</option>
-</select>
+      <select id="deflection_type">
+        <option value="absolute">Wartość bezwzględna [mm]</option>
+        <option value="relative">Wartość względna (L/x)</option>
+      </select>
 
-<div id="deflection_absolute_container">
-  <label for="delta_limit">Ugięcie dopuszczalne [mm]:</label>
-  <input type="number" id="delta_limit" value="20" step="1" />
-</div>
+      <div id="deflection_absolute_container">
+        <label for="delta_limit">Ugięcie dopuszczalne [mm]:</label>
+        <input type="number" id="delta_limit" value="20" step="1" />
+      </div>
 
-<div id="deflection_relative_container" style="display:none;">
-  <label for="delta_limit_ratio">Ugięcie dopuszczalne L/x:</label>
-  <input type="number" id="delta_limit_ratio" value="300" step="10" />
-</div>
+      <div id="deflection_relative_container" style="display:none;">
+        <label for="delta_limit_ratio">Ugięcie dopuszczalne L/x:</label>
+        <input type="number" id="delta_limit_ratio" value="300" step="10" />
+      </div>
+
       <label for="check_shear_deflection">
         <input type="checkbox" id="check_shear_deflection" checked/>
         Uwzględnij wpływ ścinania na ugięcie
       </label>
 
-     <label for="optimize">Alternatywa: dobór przekroju optymalnego (o najmniejszym A):</label>
+      <label for="optimize">Alternatywa: dobór przekroju optymalnego (o najmniejszym A):</label>
       <input type="checkbox" id="optimize" />
 
       <button id="calculateBtn">Oblicz</button>
@@ -137,14 +145,6 @@
       <h3>Schemat obciążenia (symboliczny)</h3>
       <canvas id="beamDiagram" width="600" height="120"></canvas>
     </section>
-
-<section id="material-properties">
-  <h3>Właściwości materiału</h3>
-  <p id="fm_k_display"></p>
-  <p id="fv_k_display"></p>
-  <p id="E0_display"></p>
-  <p id="density_display"></p>
-</section>
 
     <section class="results">
       <h3>Wyniki</h3>
@@ -159,15 +159,14 @@
     <p>Obciążenia charakterystyczne są przeliczane na wartości obliczeniowe z zastosowaniem współczynników γ dla każdego typu obciążenia.</p>
     <p>© 2025 Piotr Brodniewicz – Zespół Projektowy Konstimber</p>
   </footer>
+
+  <script>
+    document.getElementById('deflection_type').addEventListener('change', function () {
+      const type = this.value;
+      document.getElementById('deflection_absolute_container').style.display = type === 'absolute' ? 'block' : 'none';
+      document.getElementById('deflection_relative_container').style.display = type === 'relative' ? 'block' : 'none';
+    });
+  </script>
+
 </body>
-
-<script>
-  // Dynamic switching of deflection input type
-  document.getElementById('deflection_type').addEventListener('change', function () {
-    const type = this.value;
-    document.getElementById('deflection_absolute_container').style.display = type === 'absolute' ? 'block' : 'none';
-    document.getElementById('deflection_relative_container').style.display = type === 'relative' ? 'block' : 'none';
-  });
-</script>
-
 </html>
