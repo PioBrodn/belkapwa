@@ -114,8 +114,17 @@ document.getElementById("calculateBtn").addEventListener("click", () => {
   }
 
   const f_md = fm_k * 1e6 * kmod / gammaM;
-  const sigma_md = (M_Ed * h / 2) / I / 1e6;
+  const sigma_md = (M_Ed * 1e6 * 6) / (b * h * h * 1e9); // w N/mm²
   const isMomentSafe = sigma_md < f_md / 1e6;
+
+  const fvd = fv_k * 1e6 * kmod / gammaM; // [Pa]
+const tau_d = V_Ed * 1e3 / (b * h); // [Pa]
+const isShearSafe = tau_d < fvd;
+
+summary += `
+<p><strong>Naprężenie ścinające τ<sub>d</sub></strong> = ${(tau_d / 1e6).toFixed(2)} N/mm² ${isShearSafe ? '✅' : '❌'}</p>
+<p><strong>Nośność na ścinanie f<sub>v,d</sub></strong> = ${(fvd / 1e6).toFixed(2)} N/mm²</p>
+`;
 
   let delta_q = (5 * q_d * Math.pow(L, 4)) / (384 * E0_mean * 1e6 * I);
 
@@ -130,10 +139,98 @@ document.getElementById("calculateBtn").addEventListener("click", () => {
   const delta_q_mm = delta_q * 1000;
   const isDeflectionOk = delta_q_mm <= delta_limit;
 
-  const summary = `
-    <p><strong>Geometria:</strong> A = ${(A * 1e6).toFixed(2)} cm², I = ${(I * 1e12).toFixed(2)} cm⁴</p>
-    <p><strong>Obciążenia obliczeniowe:</strong> q = ${q_d.toFixed(2)} kN/m, P = ${P_d.toFixed(2)} kN</p>
-    <p><strong>Moment zginający M<sub>Ed</sub></strong> = ${M_Ed.toFixed(2)} kNm</p>
-    <p><strong>Naprężenie zginające σ<sub>m,d</sub></strong> = ${sigma_md.toFixed(2)} N/mm² ${isMomentSafe ? '✅' : '❌'}</p>
-    <p><strong>Nośność obliczeniowa f<sub>m,d</sub></strong> = ${(f_md / 1e6).toFixed(2)} N/mm²</p>
-    <p><strong>Wytrzymałość na ścinanie f<sub>v,k</sub>:</strong> ${fv_k.toFixed(2)} MPa, Moduł spręży...
+  let summary = "";
+  summary += `
+  <p><strong>Geometria:</strong> A = ${(A * 1e6).toFixed(2)} cm², I = ${(I * 1e12).toFixed(2)} cm⁴</p>
+  <p><strong>Obciążenia obliczeniowe:</strong> q = ${q_d.toFixed(2)} kN/m, P = ${P_d.toFixed(2)} kN</p>
+  <p><strong>Moment zginający M<sub>Ed</sub></strong> = ${M_Ed.toFixed(2)} kNm</p>
+  <p><strong>Naprężenie zginające σ<sub>m,d</sub></strong> = ${sigma_md.toFixed(2)} N/mm² ${isMomentSafe ? '✅' : '❌'}</p>
+  <p><strong>Nośność obliczeniowa f<sub>m,d</sub></strong> = ${(f_md / 1e6).toFixed(2)} N/mm²</p>
+  <p><strong>Ugięcie δ</strong> = ${delta_q_mm.toFixed(2)} mm ${isDeflectionOk ? '✅' : '❌'}, dopuszczalne = ${delta_limit.toFixed(2)} mm</p>
+`;
+
+document.getElementById("summary").innerHTML = summary;
+
+  function drawDiagrams(L, q_d, P_d, P_dist, support, M_Ed, V_Ed, delta_q_mm) {
+  const momentCtx = document.getElementById("momentCanvas").getContext("2d");
+  const shearCtx = document.getElementById("shearCanvas").getContext("2d");
+  const deflectionCtx = document.getElementById("deflectionCanvas").getContext("2d");
+
+  const width = momentCtx.canvas.width;
+  const height = momentCtx.canvas.height;
+
+  // Skalowanie (symboliczne, nie odwzorowuje wartości)
+  const scaleX = width / L;
+  const scaleYMoment = height / 2 / Math.abs(M_Ed || 1);
+  const scaleYShear = height / 2 / Math.abs(V_Ed || 1);
+  const scaleYDeflection = height / 2 / Math.abs(delta_q_mm || 1);
+
+  // Czyszczenie
+  [momentCtx, shearCtx, deflectionCtx].forEach(ctx => {
+    ctx.clearRect(0, 0, width, height);
+    ctx.strokeStyle = "black";
+    ctx.beginPath();
+    ctx.moveTo(0, height / 2);
+    ctx.lineTo(width, height / 2);
+    ctx.stroke();
+  });
+
+  // Moment zginający
+  momentCtx.beginPath();
+  momentCtx.moveTo(0, height / 2);
+  for (let x = 0; x <= L; x += L / 100) {
+    let Mx = 0;
+    if (support === "simply_supported") {
+      const R1 = (q_d * L) / 2;
+      Mx = R1 * x - q_d * x * x / 2;
+      if (x >= P_dist) {
+        const P_moment = P_d * (x - P_dist);
+        Mx -= P_moment;
+      }
+    } else if (support === "cantilever") {
+      Mx = -q_d * x * (L - x / 2);
+      if (x <= P_dist) {
+        Mx -= P_d * (L - P_dist);
+      }
+    }
+    momentCtx.lineTo(x * scaleX, height / 2 - Mx * scaleYMoment);
+  }
+  momentCtx.strokeStyle = "blue";
+  momentCtx.stroke();
+
+  // Siła tnąca
+  shearCtx.beginPath();
+  shearCtx.moveTo(0, height / 2);
+  for (let x = 0; x <= L; x += L / 100) {
+    let Vx = 0;
+    if (support === "simply_supported") {
+      const R1 = (q_d * L) / 2;
+      Vx = R1 - q_d * x;
+      if (x >= P_dist) Vx -= P_d;
+    } else if (support === "cantilever") {
+      Vx = -q_d * x;
+      if (x >= P_dist) Vx -= P_d;
+    }
+    shearCtx.lineTo(x * scaleX, height / 2 - Vx * scaleYShear);
+  }
+  shearCtx.strokeStyle = "green";
+  shearCtx.stroke();
+
+  // Ugięcie (symboliczne, paraboliczne)
+  deflectionCtx.beginPath();
+  deflectionCtx.moveTo(0, height / 2);
+  for (let x = 0; x <= L; x += L / 100) {
+    let defl = 0;
+    if (support === "simply_supported") {
+      defl = delta_q_mm * 4 * (x / L) * (1 - x / L); // paraboliczne
+    } else if (support === "cantilever") {
+      defl = delta_q_mm * Math.pow(x / L, 2);
+    }
+    deflectionCtx.lineTo(x * scaleX, height / 2 + defl * scaleYDeflection);
+  }
+  deflectionCtx.strokeStyle = "red";
+  deflectionCtx.stroke();
+}
+
+  drawDiagrams(L, q_d, P_d, P_dist, support, M_Ed, V_Ed, delta_q_mm);
+});
